@@ -14,19 +14,66 @@ public class WarehouseRepository(IConfiguration _configuration) : IWarehouseRepo
         await using var con = new SqlConnection(provideConnectionString());
         await con.OpenAsync();
         
-        //TODO: implement async
-        using var cmd = new SqlCommand();
+        await using var cmd = new SqlCommand();
         cmd.Connection = con;
         cmd.CommandText = "SELECT * FROM Product WHERE IdProduct = @IdProduct";
         cmd.Parameters.AddWithValue("@IdProduct", id);
 
-        var updatedObjects = cmd.ExecuteNonQuery();
-        return updatedObjects > 0;
+        var updatedObjects = cmd.ExecuteNonQueryAsync();
+        Task.Delay(150000);
+        return await updatedObjects > 0;
     }
     
     public async Task<bool> IsWarehouseIdExisting(int id)
     {
-        return false;
+        await using var con = new SqlConnection(provideConnectionString());
+        await con.OpenAsync();
+        
+        await using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = "SELECT * FROM Warehouse WHERE IdWarehouse = @IdWarehouse";
+        cmd.Parameters.AddWithValue("@IdWarehouse", id);
+
+        var updatedObjects = cmd.ExecuteNonQueryAsync();
+        return await updatedObjects > 0;
+    }
+    
+    public async Task<int> IsOrderExisting(int id, int amount, DateTime createDate)
+    {
+        await using var con = new SqlConnection(provideConnectionString());
+        await con.OpenAsync();
+        
+        await using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = "SELECT IdOrder FROM Order WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt < @CreateDate";
+        cmd.Parameters.AddWithValue("@IdProduct", id);
+        cmd.Parameters.AddWithValue("@Amount", amount);
+        cmd.Parameters.AddWithValue("@CreateDate", createDate);
+
+        using (var dr = await cmd.ExecuteReaderAsync())
+        {
+            while (await dr.ReadAsync())
+            {
+                return (int)dr["IdOrder"];
+            }
+        }
+                
+        
+        return -1;
+    }
+
+    public async Task<bool> IsOrderCompleted(int orderId)
+    {
+        await using var con = new SqlConnection(provideConnectionString());
+        await con.OpenAsync();
+        
+        await using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = "SELECT * FROM Product_Warehouse WHERE IdOrder = @IdOrder";
+        cmd.Parameters.AddWithValue("@IdOrder", orderId);
+
+        var updatedObjects = cmd.ExecuteNonQueryAsync();
+        return await updatedObjects > 0;
     }
     
     private string provideConnectionString()

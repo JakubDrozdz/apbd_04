@@ -16,10 +16,13 @@ public class WarehouseService(IWarehouseRepository _warehouseRepository) : IWare
     private async Task<bool> ValidateRequest(ProductWarehouseRequest request)
     {
         Task<bool> isProductExisting = _warehouseRepository.IsProductIdExisting(request.IdProduct);
-        Task<bool> isWarehouseExisting = _warehouseRepository.IsProductIdExisting(request.IdProduct);
+        Task<bool> isWarehouseExisting = _warehouseRepository.IsWarehouseIdExisting(request.IdWarehouse);
+        Task<int> isOrderExisting =
+            _warehouseRepository.IsOrderExisting(request.IdProduct, request.Amount, request.CreatedAt);
+        Task<bool> isOrderCompleted = _warehouseRepository.IsOrderCompleted(await isOrderExisting);
 
-        await Task.WhenAll([isProductExisting, isWarehouseExisting]);
+        await Task.WhenAll([isProductExisting, isWarehouseExisting, isOrderCompleted]);
 
-        return isProductExisting.Result && isWarehouseExisting.Result && request.Amount > 0;
+        return isProductExisting.Result && isWarehouseExisting.Result && request.Amount > 0 && isOrderCompleted.Result;
     }
 }

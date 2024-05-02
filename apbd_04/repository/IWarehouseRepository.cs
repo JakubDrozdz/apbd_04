@@ -11,4 +11,10 @@ public interface IWarehouseRepository
     Task<int> IsOrderExisting(int id, int amount, DateTime createDate);
 
     Task<bool> IsOrderCompleted(int orderId);
+    
+    Task<bool> UpdateOrderFullfilledAt(int orderId, DateTime dateTime);
+
+    Task<int> FulfillOrder(ProductWarehouseRequest request, int orderId);
+
+    Task<int> AddProductToWarehouseSP(ProductWarehouseRequest request);
 }
